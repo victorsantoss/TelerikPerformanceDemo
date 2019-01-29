@@ -13,16 +13,13 @@ namespace TelerikPerformanceDemo.Data
         {
         }
 
-        public virtual DbSet<Product> Product { get; set; }        
         public virtual DbSet<SalesOrderDetail> SalesOrderDetail { get; set; }
-        public virtual DbSet<SalesOrderHeader> SalesOrderHeader { get; set; }
-        public virtual DbSet<SpecialOfferProduct> SpecialOfferProduct { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer("Server=(localhost)\\SQLEXPRESS;Database=AdventureWorks2017;Trusted_Connection=True;");
+                optionsBuilder.UseSqlServer("Server=localhost\\SQLEXPRESS;Database=AdventureWorks2017;Trusted_Connection=True;");
             }
         }
 

@@ -1,0 +1,74 @@
+﻿@using Kendo.Mvc.UI
+@using TelerikPerformanceDemo.Models
+
+<html>
+<head>
+    <link href="~/lib/kendo/styles/kendo.common.min.css" rel="stylesheet" />
+    <link href="~/lib/kendo/styles/kendo.common.core.min.css" rel="stylesheet" />
+    <link href="~/lib/kendo/styles/kendo.bootstrap.min.css" rel="stylesheet" />
+    <link href="~/lib/kendo/styles/kendo.common-bootstrap.core.min.css" rel="stylesheet" />
+    <link href="~/lib/kendo/styles/kendo.common-bootstrap.min.css" rel="stylesheet" />
+    <link href="~/lib/bootstrap/css/bootstrap.css" rel="stylesheet" />
+
+    <script src="~/lib/jquery/jquery-3.1.1.js"></script>
+
+    <script src="~/lib/kendo/js/kendo.all.min.js"></script>
+    <script src="~/lib/kendo/js/kendo.aspnetmvc.min.js"></script>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Telerik Performance Demo</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="col-md-2">
+                <input type="checkbox" />
+                <label>Custom</label>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            @(Html.Kendo().Grid<OrderDetailViewModel>()
+                  .Name("Grid")
+                  .Columns(columns =>
+                  {
+                      columns.Bound(c => c.OrderDetailID);
+                      columns.Bound(c => c.AccountNumber);
+                      columns.Bound(c => c.OrderDate).Format("{0:dd/MM/yyyy}");
+                      columns.Bound(c => c.ProductName);
+                      columns.Bound(c => c.OrderTrackingNumber);
+                      columns.Bound(c => c.OrderQty);
+                      columns.Bound(c => c.UnitPrice).Format("{0:c}");
+                      columns.Bound(c => c.LineTotal).Format("{0:c}");
+                  })
+                  .Scrollable(scrollable => scrollable.Enabled(true))
+                  .Sortable(sortable => sortable.AllowUnsort(true))
+                  .Groupable()
+                  .Reorderable(r => r.Columns(true))
+                  .Resizable(rsb => rsb.Columns(true))
+                  .AutoBind(false)
+                  .Pageable(pageable => pageable
+                      .AlwaysVisible(true) 
+                      .Refresh(true)
+                      .PageSizes(new[] { 25, 100, 1000 })
+                      .Numeric(true)
+                      .ButtonCount(5)                      
+                      .PreviousNext(true)
+                  )
+                  .ColumnMenu(true)
+                  .Selectable(selectable => selectable.Mode(GridSelectionMode.Single))
+                  .DataSource(dataSource => dataSource
+                      .WebApi()
+                      .Read(read => read.Action("GetData", "Home"))
+                      .PageSize(25)                      
+                  ).AutoBind(true)
+                  )
+        </div>
+    </div>
+</div>
+</body>
+</html>

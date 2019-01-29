@@ -16,9 +16,8 @@ namespace TelerikPerformanceDemo.Controllers
             return View();
         }
 
-        public IActionResult GetData([DataSourceRequest] DataSourceRequest request, bool custom = true)
-        {
-            DataSourceResult result;
+        public JsonResult GetData([DataSourceRequest] DataSourceRequest request, bool custom = false)
+        {            
             using (var db = new AdventureWorks2017Context())
             {
                 IQueryable<OrderDetailViewModel> orders =
@@ -38,10 +37,9 @@ namespace TelerikPerformanceDemo.Controllers
                         ProductName = o.SpecialOfferProduct.Product.Name
                     });
 
-                result = custom ? orders.ToCustomDataSourceResult(request) : orders.ToDataSourceResult(request);
-            }
-
-            return Json(result);
+                var result = custom ? orders.ToCustomDataSourceResult(request) : orders.ToDataSourceResult(request);
+                return Json(result);
+            }            
         }
     }
 }
