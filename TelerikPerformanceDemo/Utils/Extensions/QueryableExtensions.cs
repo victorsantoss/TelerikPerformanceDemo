@@ -135,7 +135,7 @@ namespace TelerikPerformanceDemo.Utils.Extensions
                              Key = c.Key,
                              HasSubgroups = true,
                              Member = groupSelector.MemberWithoutInstance(),
-                             Items = tempSelector.Invoke(c)//.ToList()
+                             Items = tempSelector.Invoke(c).ToList()
                          });
         }
 
@@ -148,7 +148,7 @@ namespace TelerikPerformanceDemo.Utils.Extensions
                     {
                         Key = i.Key,
                         Member = groupSelector.MemberWithoutInstance(),
-                        Items = i//.ToList()
+                        Items = i.ToList()
                     });
         }
 
