@@ -28,7 +28,7 @@ namespace TelerikPerformanceDemo.Utils.Extensions
 
             var selector = source.VerifyOrdersGrouping(request.Groups);
 
-            IEnumerable data;            
+            IEnumerable data;
             if (selector != null)
             {
                 var skip = request.Page > 0 ? (request.Page - 1) * request.PageSize : 0;
@@ -46,7 +46,109 @@ namespace TelerikPerformanceDemo.Utils.Extensions
             };
 
             return result;
-        }       
+        }
+
+        public static DataSourceResult ToCustomDataSourceResultalt(this IQueryable<OrderDetailViewModel> source, DataSourceRequest request)
+        {
+            // FILTRE
+            source = source.ApplyOrdersFiltering(request.Filters);
+
+            // TRIER
+            source = source.ApplyOrdersSorting(request.Groups, request.Sorts);
+           
+            // TRIER DEFAUT
+            if (!request.Sorts.Any())
+            {
+                source = source.OrderBy(o => o.OrderDetailID);
+            }
+
+            // GROUPE / AGGREGATE
+            DataSourceResult result = null;
+            var methodeAlt = false;
+
+            if (!methodeAlt)
+            {
+                result = AppliquerGroupePagination(source, request);
+            }
+            else
+            {
+                result = AppliquerGroupePaginationAlternative(source, request);
+            }
+           
+
+            return result;
+        }
+
+        private static DataSourceResult AppliquerGroupePagination(IQueryable<OrderDetailViewModel> source, DataSourceRequest request)
+        {
+            var selector = source.VerifyOrdersGrouping(request.Groups);
+            var total = source.Count();
+            IEnumerable data;
+            if (selector != null)
+            {
+                var skip = request.Page > 0 ? (request.Page - 1) * request.PageSize : 0;
+                data = selector.Invoke(source).Skip(skip).Take(request.PageSize).ToList();
+            }
+            else
+            {
+                data = source.ApplyOrdersPaging(request.Page, request.PageSize).ToList();
+            }
+
+            var result = new DataSourceResult()
+            {
+                Data = data,
+                Total = total
+            };
+            return result;
+        }
+
+        private static DataSourceResult AppliquerGroupePaginationAlternative(IQueryable<OrderDetailViewModel> source, DataSourceRequest request)
+        {
+            var noPageCourante = (request.Page - 1);
+            var customGrouping = ConvertirGroupeEnOrderby(source, request, noPageCourante);
+
+            var skip = request.Page > 0 ? (noPageCourante) * request.PageSize : 0;
+            var result = new DataSourceResult()
+            {
+                Data = customGrouping.Data.AsQueryable().Skip(skip).Take(request.PageSize),
+                Total = customGrouping.Total
+            };
+
+            return result;
+        }
+
+
+        private static DataSourceResult ConvertirGroupeEnOrderby(IQueryable<OrderDetailViewModel> source, DataSourceRequest request, int noPage)
+        {
+            var grouping = request.Groups;
+            //Add ordering for the grouping
+            var tempSort = grouping.Select(g => new SortDescriptor()
+            {
+                Member = g.Member,
+                SortDirection = g.SortDirection
+            }).ToList();
+
+            tempSort.Reverse();
+            tempSort.ForEach(x => request.Sorts.Insert(0, x));
+
+
+            //var t = source.GroupBy
+
+            //Remove the grouping before exeecuting the query against NHibernate
+            request.Groups = null;
+            //Execute the query and return results from the database.
+            //These results will be paged, filtered and ordered.
+            var result = source.ToDataSourceResult(request);
+            var total = result.Total;
+            request.Groups = grouping;
+            request.Page = noPage;
+            result = result.Data.ToDataSourceResult(request);
+            result.Total = total;
+
+
+            return result;
+        }
+
     }
 
     public static class AjaxCustomBindingExtensions
@@ -135,7 +237,8 @@ namespace TelerikPerformanceDemo.Utils.Extensions
                              Key = c.Key,
                              HasSubgroups = true,
                              Member = groupSelector.MemberWithoutInstance(),
-                             Items = tempSelector.Invoke(c).ToList()
+                             Items = tempSelector.Invoke(c).ToList(),
+                             ItemCount = 33
                          });
         }
 
@@ -148,7 +251,8 @@ namespace TelerikPerformanceDemo.Utils.Extensions
                     {
                         Key = i.Key,
                         Member = groupSelector.MemberWithoutInstance(),
-                        Items = i.ToList()
+                        Items = i.ToList(),
+                        ItemCount = 33
                     });
         }
 
