@@ -14,6 +14,7 @@
 
     <script src="~/lib/kendo/js/kendo.all.min.js"></script>
     <script src="~/lib/kendo/js/kendo.aspnetmvc.min.js"></script>
+    <script src="~/js/grille.js"></script>
 </head>
 <body>
     <div class="container-fluid">
@@ -32,45 +33,72 @@
                 <span>Current behavior:</span>
             </div>
             <div class="col-md-2">
-                <input id="Custom" type="checkbox" value="true" checked="checked"/>
+                <input id="Custom" type="checkbox" value="false" />
                 <label>Custom</label>
             </div>
         </div>
         <div class="row">
             <div class="col-md-12">
+                @{
+                    var clientGroupHeaderTemplate = "# #:value# (#=count#)# #";
+                }
+                <script>
+                    var counter = 1;
+                    function onDataBound(e) {
+                        counter = 1;
+                    }
+                    function renderNumber(data) {
+                        return counter++;
+                    }
+                </script>
+
+             
                 @(Html.Kendo().Grid<OrderDetailViewModel>()
-                              .Name("Grid")
-                              .Columns(columns =>
-                              {
-                                  columns.Bound(c => c.OrderDetailID);
-                                  columns.Bound(c => c.AccountNumber);
-                                  columns.Bound(c => c.OrderDate).Format("{0:dd/MM/yyyy}");
-                                  columns.Bound(c => c.ProductName);
-                                  columns.Bound(c => c.OrderTrackingNumber);
-                                  columns.Bound(c => c.OrderQty).Groupable(false).Sortable(false);
-                                  columns.Bound(c => c.UnitPrice).Groupable(false).Sortable(false).Format("{0:c}");
-                                  columns.Bound(c => c.LineTotal).Groupable(false).Sortable(false).Format("{0:c}");
-                              })
-                              .Scrollable(scrollable => scrollable.Enabled(true))
-                              .Sortable(sortable => sortable.AllowUnsort(true))
-                              .Groupable()
-                              .Reorderable(r => r.Columns(true))
-                              .Resizable(rsb => rsb.Columns(true))
-                              .AutoBind(false)
-                              .Pageable(pageable => pageable
-                                  .AlwaysVisible(true)
-                                  .Refresh(true)
-                                  .PageSizes(new[] { 25, 100, 1000 })
-                                  .ButtonCount(5)
-                                  .PreviousNext(true)
-                              )
-                              .ColumnMenu(true)
-                              .Selectable(selectable => selectable.Mode(GridSelectionMode.Single))
-                              .DataSource(dataSource => dataSource
-                                  .WebApi()
-                                  .Read(read => read.Url($"/Home/GetData?custom=true"))
-                                  .PageSize(25)
-                              ).AutoBind(true)
+                             .Name("Grid")
+                             .Columns(columns =>
+                             {
+                                 columns.Bound(c => c.OrderDetailID).Width("50px").ClientTemplate("#= renderNumber(data) #").Title("#");
+                                 columns.Bound(c => c.OrderDetailID);
+                                 columns.Bound(c => c.AccountNumber);
+                                 columns.Bound(c => c.OrderDate).Format("{0:dd/MM/yyyy}");
+                                 columns.Bound(c => c.ProductName).Width("500px");
+                                 columns.Bound(c => c.OrderTrackingNumber).Groupable(true).Sortable(true) ;
+                                 columns.Bound(c => c.OrderQty).Groupable(true).Sortable(true);
+                                 columns.Bound(c => c.SpecialOfferID).Groupable(true);
+                                 columns.Bound(c => c.UnitPrice).Groupable(true).Sortable(false).Format("{0:c}");
+                                 columns.Bound(c => c.LineTotal).Groupable(true).Sortable(false).Format("{0:c}");
+                             })
+                             .Events(ev => ev.DataBound("onDataBound"))
+                             .Scrollable(scrollable => scrollable.Enabled(true))
+                             .Sortable(sortable => sortable.AllowUnsort(true))
+                             .Groupable()
+                             .Reorderable(r => r.Columns(true))
+                             .Resizable(rsb => rsb.Columns(true))
+                             .AutoBind(false)
+                             .Pageable(pageable => pageable
+                                 .AlwaysVisible(true)
+                                 .Refresh(true)
+                                 .PageSizes(new[] { 25, 100, 1000 })
+                                 .ButtonCount(5)
+                                 .PreviousNext(true)
+                             )
+                             .ColumnMenu(true)
+                             .Selectable(selectable => selectable.Mode(GridSelectionMode.Single))
+                             .DataSource(dataSource => dataSource
+                                 .WebApi()
+                                 .ServerOperation(true)
+                                 .Read(read => read.Url($"/Home/GetData?custom=false"))
+                                 .PageSize(100)
+
+                                  //.Aggregates(aggregates =>
+                                  //{
+                                  //     aggregates.Add(a => a.OrderQty).Count();
+                                  //     //aggregates.Add(a => a.OrderDate).Count();
+                                  //})
+
+                                   .Group(g => g.Add(c => c.OrderQty))
+
+                             ).AutoBind(true)
                 )
             </div>
         </div>
@@ -78,9 +106,9 @@
 <script>
     $("#Custom").change(function() {
         var dataSource = $("#Grid").data("kendoGrid").dataSource;
-        dataSource.transport.options.read.url = "/Home/GetData?custom=" + $(this).is(":checked"); 
+        dataSource.transport.options.read.url = "/Home/GetData?custom=" + $(this).is(":checked");
         dataSource.read();
-    })    
-</script>
+    })
+                </script>
 </body>
 </html>
