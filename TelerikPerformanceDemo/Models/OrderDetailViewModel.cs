@@ -10,6 +10,9 @@ namespace TelerikPerformanceDemo.Models
         public string ProductName { get; set; }
         public string OrderTrackingNumber { get; set; }
         public int OrderQty { get; set; }
+
+        public int SpecialOfferID { get; set; }
+
         public decimal UnitPrice { get; set; }
         public decimal LineTotal { get; set; }
     }

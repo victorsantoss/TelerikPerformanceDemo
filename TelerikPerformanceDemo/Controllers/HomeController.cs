@@ -34,10 +34,15 @@ namespace TelerikPerformanceDemo.Controllers
                         LineTotal = o.LineTotal,
                         OrderQty = o.OrderQty,
                         UnitPrice = o.UnitPrice,
-                        ProductName = o.SpecialOfferProduct.Product.Name
+                        ProductName = o.SpecialOfferProduct.Product.Name,
+                        SpecialOfferID = o.SpecialOfferId
                     });
 
+               
+
                 var result = custom ? orders.ToCustomDataSourceResult(request) : orders.ToDataSourceResult(request);
+
+
                 return Json(result);
             }            
         }
