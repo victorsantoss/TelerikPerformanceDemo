@@ -112,28 +112,17 @@ namespace TelerikPerformanceDemo.Utils.Extensions
 
         private static DataSourceResult AppliquerGroupePaginationAlternative(IQueryable<OrderDetailViewModel> source, DataSourceRequest request)
         {
-           
-            var customGrouping = ConvertirGroupeEnOrderby(source, request);
-            return customGrouping;
-            //var skip = request.Page > 0 ? (request.Page - 1) * request.PageSize : 0;
-            //var result = new DataSourceResult()
-            //{
-            //    Data = customGrouping.Data.AsQueryable().Skip(skip).Take(request.PageSize),
-            //    Total = customGrouping.Total
-            //};
-            //return result;
-        }
 
-
-        private static DataSourceResult ConvertirGroupeEnOrderby(IQueryable<OrderDetailViewModel> source, DataSourceRequest request)
-        {
             var grouping = request.Groups;
-            //Add ordering for the grouping
+
+            //convertir les grouping en trie
+            //TODO: ici il faut regarder dans les sort pour appliquer les même sort.
             var tempSort = grouping.Select(g => new SortDescriptor()
             {
                 Member = g.Member,
                 SortDirection = g.SortDirection
             }).ToList();
+            
 
             tempSort.Reverse();
             tempSort.ForEach(x => request.Sorts.Insert(0, x));
@@ -151,20 +140,15 @@ namespace TelerikPerformanceDemo.Utils.Extensions
             //These results will be paged, filtered and ordered.
             var total = source.Count();
             var result = source.ToDataSourceResult(request);
-            
+
 
             var skip = page > 0 ? (page - 1) * pageSize : 0;
             result.Data = result.Data.AsQueryable().Skip(skip).Take(pageSize);
 
-            //Réappliquer le grouping / pagination
+            //Réappliquer le grouping
             request.Groups = grouping;
-            //request.Page = page;
-            //request.PageSize = pageSize;
-
             result = result.Data.ToDataSourceResult(request);
             result.Total = total;
-
-
 
             return result;
         }
