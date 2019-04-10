@@ -40,7 +40,8 @@ namespace TelerikPerformanceDemo.Controllers
 
                
 
-                var result = custom ? orders.ToCustomDataSourceResult(request) : orders.ToDataSourceResult(request);
+                //var result = custom ? orders.ToCustomDataSourceResult(request) : orders.ToDataSourceResult(request);
+                var result = custom ? orders.ToCustomDataSourceResultAlt(request) : orders.ToDataSourceResult(request);
 
 
                 return Json(result);

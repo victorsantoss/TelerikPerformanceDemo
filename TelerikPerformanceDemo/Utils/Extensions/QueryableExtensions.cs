@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using Kendo.Mvc;
@@ -15,6 +16,8 @@ namespace TelerikPerformanceDemo.Utils.Extensions
     {
         public static DataSourceResult ToCustomDataSourceResult(this IQueryable<OrderDetailViewModel> source, DataSourceRequest request)
         {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+
             source = source.ApplyOrdersFiltering(request.Filters);
 
             var total = source.Count();
@@ -45,11 +48,20 @@ namespace TelerikPerformanceDemo.Utils.Extensions
                 Total = total
             };
 
+            watch.Stop();
+            var elapsedMs = watch.ElapsedMilliseconds;
+
+            Debug.WriteLine("============================================================");
+            Debug.WriteLine("CustomDataSourceResult: " + elapsedMs + " ms");
+            Debug.WriteLine("============================================================");
+
             return result;
         }
 
-        public static DataSourceResult ToCustomDataSourceResultalt(this IQueryable<OrderDetailViewModel> source, DataSourceRequest request)
+        public static DataSourceResult ToCustomDataSourceResultAlt(this IQueryable<OrderDetailViewModel> source, DataSourceRequest request)
         {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+
             // FILTRE
             source = source.ApplyOrdersFiltering(request.Filters);
 
@@ -63,18 +75,14 @@ namespace TelerikPerformanceDemo.Utils.Extensions
             }
 
             // GROUPE / AGGREGATE
-            DataSourceResult result = null;
-            var methodeAlt = false;
+            DataSourceResult result = AppliquerGroupePaginationAlternative(source, request);
 
-            if (!methodeAlt)
-            {
-                result = AppliquerGroupePagination(source, request);
-            }
-            else
-            {
-                result = AppliquerGroupePaginationAlternative(source, request);
-            }
-           
+            watch.Stop();
+            var elapsedMs = watch.ElapsedMilliseconds;
+
+            Debug.WriteLine("============================================================");
+            Debug.WriteLine("CustomDataSourceResult: " + elapsedMs + " ms");
+            Debug.WriteLine("============================================================");
 
             return result;
         }
@@ -104,21 +112,20 @@ namespace TelerikPerformanceDemo.Utils.Extensions
 
         private static DataSourceResult AppliquerGroupePaginationAlternative(IQueryable<OrderDetailViewModel> source, DataSourceRequest request)
         {
-            var noPageCourante = (request.Page - 1);
-            var customGrouping = ConvertirGroupeEnOrderby(source, request, noPageCourante);
-
-            var skip = request.Page > 0 ? (noPageCourante) * request.PageSize : 0;
-            var result = new DataSourceResult()
-            {
-                Data = customGrouping.Data.AsQueryable().Skip(skip).Take(request.PageSize),
-                Total = customGrouping.Total
-            };
-
-            return result;
+           
+            var customGrouping = ConvertirGroupeEnOrderby(source, request);
+            return customGrouping;
+            //var skip = request.Page > 0 ? (request.Page - 1) * request.PageSize : 0;
+            //var result = new DataSourceResult()
+            //{
+            //    Data = customGrouping.Data.AsQueryable().Skip(skip).Take(request.PageSize),
+            //    Total = customGrouping.Total
+            //};
+            //return result;
         }
 
 
-        private static DataSourceResult ConvertirGroupeEnOrderby(IQueryable<OrderDetailViewModel> source, DataSourceRequest request, int noPage)
+        private static DataSourceResult ConvertirGroupeEnOrderby(IQueryable<OrderDetailViewModel> source, DataSourceRequest request)
         {
             var grouping = request.Groups;
             //Add ordering for the grouping
@@ -132,18 +139,31 @@ namespace TelerikPerformanceDemo.Utils.Extensions
             tempSort.ForEach(x => request.Sorts.Insert(0, x));
 
 
-            //var t = source.GroupBy
+            var page = request.Page;
+            var pageSize = request.PageSize;
 
             //Remove the grouping before exeecuting the query against NHibernate
             request.Groups = null;
+            request.Page = 0;
+            request.PageSize = 0;
+
             //Execute the query and return results from the database.
             //These results will be paged, filtered and ordered.
+            var total = source.Count();
             var result = source.ToDataSourceResult(request);
-            var total = result.Total;
+            
+
+            var skip = page > 0 ? (page - 1) * pageSize : 0;
+            result.Data = result.Data.AsQueryable().Skip(skip).Take(pageSize);
+
+            //Réappliquer le grouping / pagination
             request.Groups = grouping;
-            request.Page = noPage;
+            //request.Page = page;
+            //request.PageSize = pageSize;
+
             result = result.Data.ToDataSourceResult(request);
             result.Total = total;
+
 
 
             return result;
