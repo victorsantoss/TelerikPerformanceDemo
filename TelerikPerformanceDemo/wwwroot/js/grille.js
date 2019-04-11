@@ -20,8 +20,7 @@ Grille = {
         if (grilles.length === 1) {
             var grilleId = grilles[0].id;
 
-            console.time("Requête [" + grilleId + "]");
-
+            console.time("requete[" + grilleId + "]");
             //Une correction a été faite fait pour éviter que la barre de progression ne soit en double 
             //dans le cas du retrait d'un filtre
             kendo.ui.progress($("#" + grilleId), true);
@@ -33,11 +32,29 @@ Grille = {
         var grilles = Grille.grilles();
 
         if (grilles.length === 1) {
-            var grilleId = grilles[0].id;
+
+            var grilleId = Grille.grilles()[0].id;
             kendo.ui.progress($("#" + grilleId), false);
-            console.timeEnd("Requête [" + grilleId + "]");
+
+            console.timeEnd("requete[" + grilleId + "]");
+            console.time("affichage[" + grilleId + "]");
+
+            Grille.attendreFinTraitement();
         }
     },
+
+
+
+    attendreFinTraitement: function () {
+        //data-uid
+        if ($("[data-role='grid']").find("[data-uid]").length > 0) {
+            var grilleId = Grille.grilles()[0].id;
+            console.timeEnd("affichage[" + grilleId + "]");
+        } else {
+            setTimeout(Grille.attendreFinTraitement, 100);
+        }
+    },
+
 
     commonDatabound: function (e) {
 
@@ -45,7 +62,5 @@ Grille = {
         lancerFonctionApresDelais(initialiserGridExport);
         this.initialiserSelecteurDateGrille();
         this.Etat.selectionneLignes(e);
-    },
-
-   
+    }   
 };

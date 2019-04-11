@@ -12,7 +12,7 @@
 
     <script src="~/lib/jquery/jquery-3.1.1.js"></script>
 
-    <script src="~/lib/kendo/js/kendo.all.min.js"></script>
+    <script src="~/lib/kendo/js/kendo.web.js"></script>
     <script src="~/lib/kendo/js/kendo.aspnetmvc.min.js"></script>
     <script src="~/js/grille.js"></script>
 </head>
@@ -60,14 +60,14 @@
                         columns.Bound(c => c.OrderDetailID).Width("50px").ClientTemplate("#= renderNumber(data) #").Title("#");
                         columns.Bound(c => c.OrderDetailID);
                         columns.Bound(c => c.AccountNumber);
-                        columns.Bound(c => c.OrderDate).Format("{0:dd/MM/yyyy}").Groupable(true);
+                        columns.Bound(c => c.OrderDate).Format("{0:dd/MM/yyyy}").Groupable(true).ClientGroupHeaderTemplate("#=kendo.toString(kendo.parseDate(value), 'dd/MM/yyyy')# (#=count#)");
                         columns.Bound(c => c.ProductName);
                         columns.Bound(c => c.OrderTrackingNumber).Groupable(true);
-                        columns.Bound(c => c.OrderQty).Groupable(true).Sortable(true);
+                        columns.Bound(c => c.OrderQty).Groupable(true).Sortable(true).ClientGroupHeaderTemplate("Order qty: #=value#  (Total : #=count#)");;
                         columns.Bound(c => c.UnitPrice).Groupable(false).Sortable(false).Format("{0:c}");
                         columns.Bound(c => c.LineTotal).Groupable(false).Sortable(false).Format("{0:c}");
                     })
-                       .Events(ev => ev.DataBound("onDataBound"))
+                        .Events(ev => ev.DataBound("onDataBound"))
                         .Scrollable(scrollable => scrollable.Enabled(true))
                         .Sortable(sortable => sortable.AllowUnsort(true))
                         .Groupable()
@@ -84,79 +84,32 @@
                         .ColumnMenu(true)
                         .Selectable(selectable => selectable.Mode(GridSelectionMode.Single))
                         .DataSource(dataSource => dataSource
-                                    .WebApi()
-                                        .Group(groups =>
-                                        {
-                                            groups.Add(p => p.OrderTrackingNumber);
-                                            groups.Add(p => p.OrderDate);
-                                            groups.Add(p => p.OrderQty);
-                                            
-                                        })
-                                    .Read(read => read.Url($"/Home/GetData?custom=true"))
-                                    .PageSize(50)
+                            .Ajax()
+                            .Events(a => a.Error("Grille.ErreurDataSource")
+                                                    .RequestStart("Grille.requestStart")
+                                                    .RequestEnd("Grille.requestEnd"))
+                            .Group(groups =>
+                            {
+                                
+                                groups.Add(p => p.OrderQty);
+                                groups.Add(p => p.OrderDate);
+                                groups.Add(p => p.OrderTrackingNumber);
+                            })
+                            .Aggregates(aggregates =>
+                            {
+                                aggregates.Add(p => p.OrderQty).Count();
+                                aggregates.Add(p => p.OrderDate).Count();
+
+                            })
+
+                            .ServerOperation(true)
+                            .Read(read => read.Action("GetData", "Home", new {custom="true"}))
+                            // .Read(read => read.Url($"/Home/GetData?custom=true"))
+                            .PageSize(500)
                                     )
                           .AutoBind(true)
+
                           )
-
-
-                    @*@(Html.Kendo().Grid<OrderDetailViewModel>()
-                                 .Name("Grid")
-                                 .Columns(columns =>
-                                 {
-                                     columns.Bound(c => c.OrderDetailID).Width("50px").ClientTemplate("#= renderNumber(data) #").Title("#");
-                                     columns.Bound(c => c.OrderDetailID);
-                                     columns.Bound(c => c.AccountNumber);
-                                     columns.Bound(c => c.OrderDate).Format("{0:dd/MM/yyyy}");
-                                     columns.Bound(c => c.ProductName).Width("500px");
-                                     columns.Bound(c => c.OrderTrackingNumber).Groupable(true).Sortable(true);
-                                     columns.Bound(c => c.OrderQty).Groupable(true).Sortable(true);
-                                     columns.Bound(c => c.SpecialOfferID).Groupable(true);
-                                     columns.Bound(c => c.UnitPrice).Groupable(true).Sortable(false).Format("{0:c}");
-                                     columns.Bound(c => c.LineTotal).Groupable(true).Sortable(false).Format("{0:c}");
-                                 })
-                                 .Events(ev => ev.DataBound("onDataBound"))
-                                 .Scrollable(scrollable => scrollable.Enabled(true))
-                                 .Sortable(sortable => sortable.AllowUnsort(true))
-
-                                 .Groupable()
-                                 .Reorderable(r => r.Columns(true))
-                                 .Resizable(rsb => rsb.Columns(true))
-                                 .AutoBind(false)
-                                 .Pageable(pageable => pageable
-                                     .AlwaysVisible(true)
-                                     .Refresh(true)
-                                     .PageSizes(new[] { 25, 100, 1000 })
-                                     .ButtonCount(5)
-                                     .PreviousNext(true)
-                                 )
-                                 .ColumnMenu(true)
-
-                                 .Selectable(selectable => selectable.Mode(GridSelectionMode.Single))
-                                 .DataSource(dataSource => dataSource
-                                     .WebApi()
-                                     //.Ajax()
-                                     //.Aggregates(aggregates =>
-                                     //{
-                                     //    aggregates.Add(p => p.OrderDate).Count();
-                                     //    aggregates.Add(p => p.OrderQty).Count();
-                                     //})
-                                     .Group(groups =>
-                                     {
-                                         groups.Add(p => p.OrderDate);
-                                         groups.Add(p => p.OrderQty);
-                                     })
-                                     .Read(read => read.Url($"/Home/GetData?custom=true"))
-                                     .PageSize(50)
-                                    // .ServerOperation(true)
-
-                                 //.Aggregates(aggregates =>
-                                 //{
-                                 //     aggregates.Add(a => a.OrderQty).Count();
-                                 //     //aggregates.Add(a => a.OrderDate).Count();
-                                 //})
-
-                                 ).AutoBind(true)
-                    )*@
             </div>
         </div>
     </div>

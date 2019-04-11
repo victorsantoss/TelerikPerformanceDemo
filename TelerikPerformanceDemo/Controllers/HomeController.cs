@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
+using System.Linq;
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Microsoft.AspNetCore.Mvc;
@@ -38,11 +39,20 @@ namespace TelerikPerformanceDemo.Controllers
                         SpecialOfferID = o.SpecialOfferId
                     });
 
+
+                var watch = Stopwatch.StartNew();
                
+                var result = custom ? orders.ToCustomDataSourceResul(request) : orders.ToDataSourceResult(request);
 
-                //var result = custom ? orders.ToCustomDataSourceResult(request) : orders.ToDataSourceResult(request);
-                var result = custom ? orders.ToCustomDataSourceResultAlt(request) : orders.ToDataSourceResult(request);
 
+                watch.Stop();
+                var elapsedMs = watch.ElapsedMilliseconds;
+
+                Debug.WriteLine("============================================================");
+                Debug.WriteLine(" > HomeController: " + elapsedMs + " ms");
+                Debug.WriteLine("============================================================");
+
+                var t = result.Data;
 
                 return Json(result);
             }            
