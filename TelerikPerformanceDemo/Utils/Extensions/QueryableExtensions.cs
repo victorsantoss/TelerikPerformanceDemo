@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections;
+﻿using Kendo.Mvc;
+using Kendo.Mvc.Extensions;
+using Kendo.Mvc.Infrastructure;
+using Kendo.Mvc.UI;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-using Kendo.Mvc;
-using Kendo.Mvc.Extensions;
-using Kendo.Mvc.Infrastructure;
-using Kendo.Mvc.UI;
 using TelerikPerformanceDemo.Models;
 
 namespace TelerikPerformanceDemo.Utils.Extensions
@@ -21,48 +20,24 @@ namespace TelerikPerformanceDemo.Utils.Extensions
     
         public static DataSourceResult ToCustomDataSourceResul(this IQueryable<OrderDetailViewModel> source, DataSourceRequest request)
         {
-            var watch = System.Diagnostics.Stopwatch.StartNew();
+            var watch = Stopwatch.StartNew();
 
             //DataSourceResult result = AppliquerGroupePaginationAlternative(source, request);
             //========================== AppliquerGroupePaginationAlternative
 
-            var grouping = request.Groups;
-
-            //convertir les grouping en trie
-            //TODO: ici il faut regarder dans les sort pour appliquer les même sort.
-            var tempSort = grouping.Select(g => new SortDescriptor()
-            {
-                Member = g.Member,
-                SortDirection = g.SortDirection
-            }).ToList();
-
-
-            tempSort.Reverse();
-            tempSort.ForEach(x => request.Sorts.Insert(0, x));
-
-
+            var grouping = request.RetirerGrouping(source);
             var page = request.Page;
             var pageSize = request.PageSize;
 
             //Remove the grouping before exeecuting the query against NHibernate
-            request.Groups = null;
+            
             request.Page = 0;
             request.PageSize = 0;
 
-            //Execute the query and return results from the database.
-            //These results will be paged, filtered and ordered.
             var total = source.Count();
             var result = source.ToDataSourceResult(request);
 
-          
-
-            //result.Data.AsQueryable().Where(p => p.Status == ProjectStatus.Active)
-            //                                .GroupBy(f => f.Country)
-            //                                .Select(g => new { country = g.Key, count = g.Count() })
-            //                                .ToDictionary(k => k.country, i => i.count);
-
-
-
+           
             var skip = page > 0 ? (page - 1) * pageSize : 0;
             result.Data = result.Data.AsQueryable().Skip(skip).Take(pageSize);
 
@@ -82,6 +57,24 @@ namespace TelerikPerformanceDemo.Utils.Extensions
             Debug.WriteLine("============================================================");
 
             return result;
+        }
+
+
+        public static IList<GroupDescriptor> RetirerGrouping(this DataSourceRequest request, IQueryable<OrderDetailViewModel> source)
+        {
+            var grouping = request.Groups;
+
+            //convertir les grouping en OrderBy
+            var tempSort = grouping.Select(g => new SortDescriptor()
+            {
+                Member = g.Member,
+                SortDirection = g.SortDirection
+            }).ToList();
+            
+            tempSort.Reverse();
+            tempSort.ForEach(x => request.Sorts.Insert(0, x));
+            request.Groups = null;
+            return grouping;
         }
 
         //private static DataSourceResult AppliquerGroupePagination(IQueryable<OrderDetailViewModel> source, DataSourceRequest request)
@@ -299,86 +292,84 @@ namespace TelerikPerformanceDemo.Utils.Extensions
             return data;
         }
 
-        //public static Func<IEnumerable<OrderDetailViewModel>, IEnumerable<AggregateFunctionsGroup>> VerifyOrdersGrouping(this IQueryable<OrderDetailViewModel> data, IList<GroupDescriptor>
-        //    groupDescriptors)
-        //{
-        //    Func<IEnumerable<OrderDetailViewModel>, IEnumerable<AggregateFunctionsGroup>> selector = null;
+        public static Func<IEnumerable<OrderDetailViewModel>, IEnumerable<AggregateFunctionsGroup>> VerifyOrdersGrouping(this IQueryable<OrderDetailViewModel> data, IList<GroupDescriptor>
+            groupDescriptors)
+        {
+            Func<IEnumerable<OrderDetailViewModel>, IEnumerable<AggregateFunctionsGroup>> selector = null;
 
-        //    if (groupDescriptors != null && groupDescriptors.Any())
-        //    {
-        //        foreach (var group in groupDescriptors.Reverse())
-        //        {
-        //            if (selector == null)
-        //            {
-        //                if (group.Member == "OrderDetailID")
-        //                {
-        //                    selector = OrderDetails => BuildInnerGroup(OrderDetails, o => o.OrderDetailID);
-        //                }
-        //                else if (group.Member == "AccountNumber")
-        //                {
-        //                    selector = OrderDetails => BuildInnerGroup(OrderDetails, o => o.AccountNumber);
-        //                }
-        //                else if (group.Member == "OrderDate")
-        //                {
-        //                    selector = OrderDetails => BuildInnerGroup(OrderDetails, o => o.OrderDate);
-        //                }
-        //                else if (group.Member == "ProductName")
-        //                {
-        //                    selector = OrderDetails => BuildInnerGroup(OrderDetails, o => o.ProductName);
-        //                }
-        //                else if (group.Member == "OrderTrackingNumber")
-        //                {
-        //                    selector = OrderDetails => BuildInnerGroup(OrderDetails, o => o.OrderTrackingNumber);
-        //                }
-        //            }
-        //            else
-        //            {
-        //                if (group.Member == "OrderDetailID")
-        //                {
-        //                    selector = BuildGroup(o => o.OrderDetailID, selector);
-        //                }
-        //                else if (group.Member == "AccountNumber")
-        //                {
-        //                    selector = BuildGroup(o => o.AccountNumber, selector);
-        //                }
-        //                else if (group.Member == "OrderDate")
-        //                {
-        //                    selector = BuildGroup(o => o.OrderDate, selector);
-        //                }
-        //                else if (group.Member == "ProductName")
-        //                {
-        //                    selector = BuildGroup(o => o.ProductName, selector);
-        //                }
-        //                else if (group.Member == "OrderTrackingNumber")
-        //                {
-        //                    selector = BuildGroup(o => o.OrderTrackingNumber, selector);
-        //                }
-        //            }
-        //        }
-        //    }
+            if (groupDescriptors != null && groupDescriptors.Any())
+            {
+                foreach (var group in groupDescriptors.Reverse())
+                {
+                    if (selector == null)
+                    {
+                        if (group.Member == "OrderDetailID")
+                        {
+                            selector = OrderDetails => BuildInnerGroup(OrderDetails, o => o.OrderDetailID);
+                        }
+                        else if (group.Member == "AccountNumber")
+                        {
+                            selector = OrderDetails => BuildInnerGroup(OrderDetails, o => o.AccountNumber);
+                        }
+                        else if (group.Member == "OrderDate")
+                        {
+                            selector = OrderDetails => BuildInnerGroup(OrderDetails, o => o.OrderDate);
+                        }
+                        else if (group.Member == "ProductName")
+                        {
+                            selector = OrderDetails => BuildInnerGroup(OrderDetails, o => o.ProductName);
+                        }
+                        else if (group.Member == "OrderTrackingNumber")
+                        {
+                            selector = OrderDetails => BuildInnerGroup(OrderDetails, o => o.OrderTrackingNumber);
+                        }
+                    }
+                    else
+                    {
+                        if (group.Member == "OrderDetailID")
+                        {
+                            selector = BuildGroup(o => o.OrderDetailID, selector);
+                        }
+                        else if (group.Member == "AccountNumber")
+                        {
+                            selector = BuildGroup(o => o.AccountNumber, selector);
+                        }
+                        else if (group.Member == "OrderDate")
+                        {
+                            selector = BuildGroup(o => o.OrderDate, selector);
+                        }
+                        else if (group.Member == "ProductName")
+                        {
+                            selector = BuildGroup(o => o.ProductName, selector);
+                        }
+                        else if (group.Member == "OrderTrackingNumber")
+                        {
+                            selector = BuildGroup(o => o.OrderTrackingNumber, selector);
+                        }
+                    }
+                }
+            }
 
-        //    return selector;
-        //}
+            return selector;
+        }
 
-        //private static Func<IEnumerable<OrderDetailViewModel>, IEnumerable<AggregateFunctionsGroup>> BuildGroup<T>(
-        //    Expression<Func<OrderDetailViewModel, T>> groupSelector,
-        //    Func<IEnumerable<OrderDetailViewModel>, IEnumerable<AggregateFunctionsGroup>> selectorBuilder)
-        //{
-        //    var tempSelector = selectorBuilder;
-        //    return g => g.GroupBy(groupSelector.Compile())
-        //                 .Select(c => new AggregateFunctionsGroup
-        //                 {
-        //                     Key = c.Key,
-        //                     HasSubgroups = true,
-        //                     Member = groupSelector.MemberWithoutInstance(),
-        //                     Items = tempSelector.Invoke(c).ToList(),
-        //                     ItemCount = 33
-        //                 });
-        //}
+        private static Func<IEnumerable<OrderDetailViewModel>, IEnumerable<AggregateFunctionsGroup>> BuildGroup<T>(
+            Expression<Func<OrderDetailViewModel, T>> groupSelector,
+            Func<IEnumerable<OrderDetailViewModel>, IEnumerable<AggregateFunctionsGroup>> selectorBuilder)
+        {
+            var tempSelector = selectorBuilder;
+            return g => g.GroupBy(groupSelector.Compile())
+                         .Select(c => new AggregateFunctionsGroup
+                         {
+                             Key = c.Key,
+                             HasSubgroups = true,
+                             Member = groupSelector.MemberWithoutInstance(),
+                             Items = tempSelector.Invoke(c).ToList(),
+                             ItemCount = 33
+                         });
+        }
 
-        private static IEnumerable<AggregateFunctionsGroup> BuildInnerGroup<T>(
-            IEnumerable<OrderDetailViewModel> group,
-            Expression<Func<OrderDetailViewModel, T>> groupSelector)
+        private static IEnumerable<AggregateFunctionsGroup> BuildInnerGroup<T>( IEnumerable<OrderDetailViewModel> group, Expression<Func<OrderDetailViewModel, T>> groupSelector)
         {
             return group.GroupBy(groupSelector.Compile())
                     .Select(i => new AggregateFunctionsGroup
