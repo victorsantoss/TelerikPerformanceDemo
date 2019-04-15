@@ -20,7 +20,7 @@ Grille = {
         if (grilles.length === 1) {
             var grilleId = grilles[0].id;
 
-            console.time("requete[" + grilleId + "]");
+            console.time("requete");
             //Une correction a été faite fait pour éviter que la barre de progression ne soit en double 
             //dans le cas du retrait d'un filtre
             kendo.ui.progress($("#" + grilleId), true);
@@ -36,22 +36,24 @@ Grille = {
             var grilleId = Grille.grilles()[0].id;
             kendo.ui.progress($("#" + grilleId), false);
 
-            console.timeEnd("requete[" + grilleId + "]");
-            console.time("affichage[" + grilleId + "]");
 
-            Grille.attendreFinTraitement();
+            console.timeEnd("requete");            
+            console.time("rafraichissement");
+            setTimeout(Grille.attendreFinTraitement, 100);
         }
     },
 
 
 
     attendreFinTraitement: function () {
-        //data-uid
-        if ($("[data-role='grid']").find("[data-uid]").length > 0) {
+
+
+        if ($("[data-role='grid']").find(".k-loading-mask").length < 1) {
             var grilleId = Grille.grilles()[0].id;
-            console.timeEnd("affichage[" + grilleId + "]");
+            console.timeEnd("rafraichissement");
+            console.log("nombre d'enregistrement: " + $("[data-uid]").length);
         } else {
-            setTimeout(Grille.attendreFinTraitement, 100);
+            setTimeout(Grille.attendreFinRafraichissement(), 100);
         }
     },
 

@@ -103,8 +103,7 @@
                             })
 
                             .ServerOperation(true)
-                            .Read(read => read.Action("GetData", "Home", new {custom="true"}))
-                            // .Read(read => read.Url($"/Home/GetData?custom=true"))
+                            .Read(read => read.Action("GetData", "Home", new {custom="false"}))
                             .PageSize(500)
                                     )
                           .AutoBind(true)

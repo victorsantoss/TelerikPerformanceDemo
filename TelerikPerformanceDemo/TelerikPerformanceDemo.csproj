@@ -12,6 +12,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Telerik.UI.for.AspNet.Core" Version="2019.1.220" />
   </ItemGroup>
 
   <ItemGroup>

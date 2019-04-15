@@ -25,7 +25,7 @@ namespace TelerikPerformanceDemo.Utils.Extensions
             //DataSourceResult result = AppliquerGroupePaginationAlternative(source, request);
             //========================== AppliquerGroupePaginationAlternative
 
-            var grouping = request.RetirerGrouping(source);
+            var grouping = request.ConvertirGroupeEnTri(source);
             var page = request.Page;
             var pageSize = request.PageSize;
 
@@ -60,7 +60,7 @@ namespace TelerikPerformanceDemo.Utils.Extensions
         }
 
 
-        public static IList<GroupDescriptor> RetirerGrouping(this DataSourceRequest request, IQueryable<OrderDetailViewModel> source)
+        public static IList<GroupDescriptor> ConvertirGroupeEnTri(this DataSourceRequest request, IQueryable<OrderDetailViewModel> source)
         {
             var grouping = request.Groups;
 
