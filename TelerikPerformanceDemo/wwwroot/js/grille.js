@@ -19,7 +19,7 @@ Grille = {
         var grilles = Grille.grilles();
         if (grilles.length === 1) {
             var grilleId = grilles[0].id;
-
+          
             console.time("requete");
             //Une correction a été faite fait pour éviter que la barre de progression ne soit en double 
             //dans le cas du retrait d'un filtre

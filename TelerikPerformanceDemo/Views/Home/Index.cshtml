@@ -60,10 +60,10 @@
                         columns.Bound(c => c.OrderDetailID).Width("50px").ClientTemplate("#= renderNumber(data) #").Title("#");
                         columns.Bound(c => c.OrderDetailID);
                         columns.Bound(c => c.AccountNumber);
-                        columns.Bound(c => c.OrderDate).Format("{0:dd/MM/yyyy}").Groupable(true).ClientGroupHeaderTemplate("#=kendo.toString(kendo.parseDate(value), 'dd/MM/yyyy')# (#=count#)");
+                        columns.Bound(c => c.OrderDate).Format("{0:dd/MM/yyyy}").Groupable(true).ClientGroupHeaderTemplate("#=kendo.toString(kendo.parseDate(value), 'dd/MM/yyyy')# ");//
                         columns.Bound(c => c.ProductName);
                         columns.Bound(c => c.OrderTrackingNumber).Groupable(true);
-                        columns.Bound(c => c.OrderQty).Groupable(true).Sortable(true).ClientGroupHeaderTemplate("Order qty: #=value#  (Total : #=count#)");;
+                        columns.Bound(c => c.OrderQty).Groupable(true).Sortable(true).ClientGroupHeaderTemplate("Order qty: #=value# ");// (Total : #=count#)
                         columns.Bound(c => c.UnitPrice).Groupable(false).Sortable(false).Format("{0:c}");
                         columns.Bound(c => c.LineTotal).Groupable(false).Sortable(false).Format("{0:c}");
                     })
@@ -90,7 +90,6 @@
                                                     .RequestEnd("Grille.requestEnd"))
                             .Group(groups =>
                             {
-                                
                                 groups.Add(p => p.OrderQty);
                                 groups.Add(p => p.OrderDate);
                                 groups.Add(p => p.OrderTrackingNumber);
@@ -99,7 +98,7 @@
                             {
                                 aggregates.Add(p => p.OrderQty).Count();
                                 aggregates.Add(p => p.OrderDate).Count();
-
+                                aggregates.Add(p => p.OrderTrackingNumber).Count();
                             })
 
                             .ServerOperation(true)
